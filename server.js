@@ -173,10 +173,14 @@ app.post("/deposit",authenticateToken, async (req, res) => {
 
   const fromAccountRows = await getRows(`SELECT * FROM Accounts WHERE Account_number = ?`, [fromAccountNum]);
 
-  console.log('fromAccountRows',fromAccountRows)
+  console.log('fromAccountRows',fromAccountRows[fromAccountRows.length - 1])
   
 
   const toAccountRows = await getRows(`SELECT * FROM Accounts WHERE account_number = ?`, [toAccountNum]);
+
+  console.log('toAccountRows',toAccountRows[toAccountRows.length - 1])
+
+  console.log('toAccountRows Name',toAccountRows[0].Account_holder_name)
 
 
   if (fromAccountRows[fromAccountRows.length - 1].Remaining_balance < depositAmount){
@@ -194,8 +198,9 @@ app.post("/deposit",authenticateToken, async (req, res) => {
     const afterDepositBalance = parseInt(toAccountRows[toAccountRows.length - 1].Remaining_balance) + parseInt(depositAmount);
     console.log('afterDepositBalance',afterDepositBalance)
 
-    db.run(`INSERT INTO Accounts (Account_holder_name, account_number, credited_amount, credited_time, credited_by, debited_amount, debited_time, Remaining_balance)
-        VALUES ('${fromAccountRows[0].Account_holder_name}', ${fromAccountNum}, '', '', '', ${depositAmount}, '${depositTime}', ${newBalance})`,
+
+    db.run(`INSERT INTO Accounts (Account_holder_name, account_number, credited_amount, credited_time, credited_by, debited_amount, debited_time, Remaining_balance,deposited_to)
+        VALUES ('${fromAccountRows[0].Account_holder_name}', ${fromAccountNum}, '', '', '', ${depositAmount}, '${depositTime}', ${newBalance},'${toAccountRows[0].Account_holder_name}')`,
         function(err) {
           if (err) {
             console.error(err.message);
@@ -215,8 +220,8 @@ app.post("/deposit",authenticateToken, async (req, res) => {
       });
 
 
-      db.run(`INSERT INTO Accounts (Account_holder_name, account_number, credited_amount, credited_time, credited_by, debited_amount, debited_time, Remaining_balance)
-        VALUES ('${toAccountRows[0].Account_holder_name}', ${toAccountNum}, ${depositAmount}, '${depositTime}', '${fromAccountRows[0].Account_holder_name}', '', '', ${afterDepositBalance})`,
+      db.run(`INSERT INTO Accounts (Account_holder_name, account_number, credited_amount, credited_time, credited_by, debited_amount, debited_time, Remaining_balance,deposited_to)
+        VALUES ('${toAccountRows[0].Account_holder_name}', ${toAccountNum}, ${depositAmount}, '${depositTime}', '${fromAccountRows[0].Account_holder_name}', '', '', ${afterDepositBalance},'${toAccountRows[0].Account_holder_name}')`,
         function(err) {
           if (err) {
             return res.status(400).json(`${err.message}`);
@@ -251,10 +256,12 @@ app.post("/withdraw",authenticateToken, async (req, res) => {
     return res.status(400).json('Insufficient balance');
   }
   else{
-    const newBalance = fromAccountRows[fromAccountRows.length - 1].Remaining_balance  - withdrawAmount;   
+    const newBalance = fromAccountRows[fromAccountRows.length - 1].Remaining_balance  - withdrawAmount;
+    
+    const depositedTo = 'Self';
 
-      db.run(`INSERT INTO Accounts (Account_holder_name, Account_number, credited_amount, credited_time, credited_by, debited_amount, debited_time, Remaining_balance)
-        VALUES ('${fromAccountRows[0].Account_holder_name}', ${fromAccountRows[0].Account_number}, '', '', '', ${withdrawAmount}, '${withdrawnTime}', ${newBalance})`,
+      db.run(`INSERT INTO Accounts (Account_holder_name, Account_number, credited_amount, credited_time, credited_by, debited_amount, debited_time, Remaining_balance,deposited_to)
+        VALUES ('${fromAccountRows[0].Account_holder_name}', ${fromAccountRows[0].Account_number}, '', '', '', ${withdrawAmount}, '${withdrawnTime}', ${newBalance},'${depositedTo}')`,
         function(err) {
           if (err) {
             console.error(err.message);
@@ -286,7 +293,7 @@ app.post("/gettransactiondetails", authenticateToken,(req, res) => {
 
   // query SQLite database for account information
   db.all(
-    `SELECT credited_amount, credited_time, credited_by, debited_amount, debited_time,Remaining_balance 
+    `SELECT * 
      FROM Accounts 
      WHERE account_number = ?`,
     [customerAccountNumber],

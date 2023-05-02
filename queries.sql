@@ -2,11 +2,23 @@
 SET Account_balance = 8000
 WHERE Account_holder_name = 'Pavan';*/
 
-SELECT * FROM Accounts
+/*ALTER TABLE Accounts
+ADD deposited_to VARCHAR(255);*/
+
+
+SELECT * FROM Users
+
+/*UPDATE Accounts
+SET deposited_to = 'Ashok'
+WHERE debited_amount IS NOT NULL AND debited_amount <> '';*/
+
+
+
+
 
 /*UPDATE Users
-SET account_balance = 10020000.0
-WHERE password = 'tothidonga';*/
+SET password = 'dot'
+WHERE email_id = 'rahul@gmail.com';*/
 
 /*DELETE FROM Accounts*/
 
