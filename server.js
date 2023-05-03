@@ -167,20 +167,28 @@ const getRows = (query, params) => {
   });
 };
 
+const getCount = (tableName) => {
+  const query = `SELECT COUNT(*) as count FROM ${tableName};`;
+  return new Promise((resolve, reject) => {
+    db.get(query, [], (err, row) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(row.count);
+      }
+    });
+  });
+};
+
+
 app.post("/deposit",authenticateToken, async (req, res) => {
   const { depositTime,fromAccountNum,toAccountNum,depositAmount} = req.body;
   
 
   const fromAccountRows = await getRows(`SELECT * FROM Accounts WHERE Account_number = ?`, [fromAccountNum]);
-
-  console.log('fromAccountRows',fromAccountRows[fromAccountRows.length - 1])
   
 
   const toAccountRows = await getRows(`SELECT * FROM Accounts WHERE account_number = ?`, [toAccountNum]);
-
-  console.log('toAccountRows',toAccountRows[toAccountRows.length - 1])
-
-  console.log('toAccountRows Name',toAccountRows[0].Account_holder_name)
 
 
   if (fromAccountRows[fromAccountRows.length - 1].Remaining_balance < depositAmount){
@@ -198,16 +206,24 @@ app.post("/deposit",authenticateToken, async (req, res) => {
     const afterDepositBalance = parseInt(toAccountRows[toAccountRows.length - 1].Remaining_balance) + parseInt(depositAmount);
     console.log('afterDepositBalance',afterDepositBalance)
 
+    let newId1;
 
-    db.run(`INSERT INTO Accounts (Account_holder_name, account_number, credited_amount, credited_time, credited_by, debited_amount, debited_time, Remaining_balance,deposited_to)
-        VALUES ('${fromAccountRows[0].Account_holder_name}', ${fromAccountNum}, '', '', '', ${depositAmount}, '${depositTime}', ${newBalance},'${toAccountRows[0].Account_holder_name}')`,
-        function(err) {
-          if (err) {
-            console.error(err.message);
-          } else {
-            console.log('Rows inserted successfully!');
-          }
-      });
+    function handleNewId1() {
+      console.log('newId num of rows', newId1);
+
+      const newId2 = parseInt(newId1) + 1;
+
+      const depositedTo = 'Self';
+
+      db.run(`INSERT INTO Accounts (Account_holder_name, account_number, credited_amount, credited_time, credited_by, debited_amount, debited_time, Remaining_balance, deposited_to, id)
+            VALUES ('${fromAccountRows[0].Account_holder_name}', ${fromAccountNum}, '', '', '', ${depositAmount}, '${depositTime}', ${newBalance}, '${toAccountRows[0].Account_holder_name}', '${newId2}')`,
+            function(err) {
+              if (err) {
+                console.error(err.message);
+              } else {
+                console.log(`Rows inserted successfully!`);
+              }
+          });
 
 
       // update the account_balance column for a user with account_number 4567890123
@@ -217,18 +233,17 @@ app.post("/deposit",authenticateToken, async (req, res) => {
         } else {
           console.log(`Rows updated: ${this.changes}`);
         }
-      });
 
 
-      db.run(`INSERT INTO Accounts (Account_holder_name, account_number, credited_amount, credited_time, credited_by, debited_amount, debited_time, Remaining_balance,deposited_to)
-        VALUES ('${toAccountRows[0].Account_holder_name}', ${toAccountNum}, ${depositAmount}, '${depositTime}', '${fromAccountRows[0].Account_holder_name}', '', '', ${afterDepositBalance},'${toAccountRows[0].Account_holder_name}')`,
-        function(err) {
-          if (err) {
-            return res.status(400).json(`${err.message}`);
-          } else {
-            return res.status(200).json(`Amount is deposited successfully from ${fromAccountRows[0].Account_holder_name} to ${toAccountRows[0].Account_holder_name}`);
-          }
-      });
+      db.run(`INSERT INTO Accounts (Account_holder_name, account_number, credited_amount, credited_time, credited_by, debited_amount, debited_time, Remaining_balance, deposited_to, id)
+            VALUES ('${toAccountRows[0].Account_holder_name}', ${toAccountNum}, ${depositAmount}, '${depositTime}', '${fromAccountRows[0].Account_holder_name}', '', '', ${afterDepositBalance}, '${toAccountRows[0].Account_holder_name}', '${newId1}')`,
+            function(err) {
+              if (err) {
+                return res.status(400).json(`${err.message}`);
+              } else {
+                return res.status(200).json(`Amount is deposited successfully from ${fromAccountRows[0].Account_holder_name} to ${toAccountRows[0].Account_holder_name}`);
+              }
+          });
 
 
       // update the account_balance column for a user with account_number 4567890123
@@ -239,6 +254,20 @@ app.post("/deposit",authenticateToken, async (req, res) => {
           console.log(`Rows updated: ${this.changes}`);
         }
       });
+
+
+      
+      });
+    }
+
+    getCount('Accounts')  
+      .then(count => {
+        newId1 = count + 1;
+        console.log(`The number of rows in Accounts is ${count}`);
+        console.log(`The new ID is ${newId1}`);
+        handleNewId1();
+      })
+      .catch(err => console.error(err));
   }
 
 
@@ -257,11 +286,16 @@ app.post("/withdraw",authenticateToken, async (req, res) => {
   }
   else{
     const newBalance = fromAccountRows[fromAccountRows.length - 1].Remaining_balance  - withdrawAmount;
-    
-    const depositedTo = 'Self';
 
-      db.run(`INSERT INTO Accounts (Account_holder_name, Account_number, credited_amount, credited_time, credited_by, debited_amount, debited_time, Remaining_balance,deposited_to)
-        VALUES ('${fromAccountRows[0].Account_holder_name}', ${fromAccountRows[0].Account_number}, '', '', '', ${withdrawAmount}, '${withdrawnTime}', ${newBalance},'${depositedTo}')`,
+    let newId;
+
+function handleNewId() {
+  console.log('newId num of rows', newId);
+
+  const depositedTo = 'Self';
+
+      db.run(`INSERT INTO Accounts (Account_holder_name, Account_number, credited_amount, credited_time, credited_by, debited_amount, debited_time, Remaining_balance,deposited_to,id)
+        VALUES ('${fromAccountRows[0].Account_holder_name}', ${fromAccountRows[0].Account_number}, '', '', '', ${withdrawAmount}, '${withdrawnTime}', ${newBalance},'${depositedTo}',${newId})`,
         function(err) {
           if (err) {
             console.error(err.message);
@@ -280,6 +314,19 @@ app.post("/withdraw",authenticateToken, async (req, res) => {
           console.log(`Rows updated: ${this.changes}`);
         }
       });
+}
+
+getCount('Accounts')  
+  .then(count => {
+    newId = count + 1;
+    console.log(`The number of rows in Accounts is ${count}`);
+    console.log(`The new ID is ${newId}`);
+    handleNewId();
+  })
+  .catch(err => console.error(err));
+
+    
+    
   }
 
 
@@ -295,7 +342,8 @@ app.post("/gettransactiondetails", authenticateToken,(req, res) => {
   db.all(
     `SELECT * 
      FROM Accounts 
-     WHERE account_number = ?`,
+     WHERE account_number = ?
+     ORDER BY id DESC`,
     [customerAccountNumber],
     (err, rows) => {
       if (err) {

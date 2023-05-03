@@ -3,14 +3,23 @@ SET Account_balance = 8000
 WHERE Account_holder_name = 'Pavan';*/
 
 /*ALTER TABLE Accounts
-ADD deposited_to VARCHAR(255);*/
+ADD id INT;*/
 
 
-SELECT * FROM Users
+/*SELECT * FROM Accounts*/
+
+
 
 /*UPDATE Accounts
 SET deposited_to = 'Ashok'
 WHERE debited_amount IS NOT NULL AND debited_amount <> '';*/
+
+/*UPDATE Accounts
+SET id = (
+  SELECT COUNT(*) + 1
+  FROM Accounts AS a2
+  WHERE a2.id < Accounts.id
+);*/
 
 
 
@@ -35,15 +44,15 @@ WHERE email_id = 'rahul@gmail.com';*/
     Remaining_balance REAL
 );*/
 
-/*INSERT INTO Accounts VALUES ('Rajashekar', 2345678901, 100, '2023-04-28 10:00:00', 'Ashok', '', '', 5000);
+/*INSERT INTO Accounts VALUES ('Rajashekar', 2345678901, 100, '2023-04-28 10:00:00', 'Ashok', '', '', 5000,'Ashok',1);
 
-INSERT INTO Accounts VALUES ('Ashok', 4567890123, 500, '2023-04-28 12:00:00', 'Rajashekar', '', '', 5000);
+INSERT INTO Accounts VALUES ('Ashok', 4567890123, 500, '2023-04-28 12:00:00', 'Rajashekar', '', '', 5000,'Rajashekar',2);
 
-INSERT INTO Accounts VALUES ('Devaraj', 7890123456, 2000, '2023-04-28 12:00:00', 'Rajashekar', '', '', 5000);
+INSERT INTO Accounts VALUES ('Devaraj', 7890123456, 2000, '2023-04-28 12:00:00', 'Pavan', '', '', 5000,'Pavan',3);
 
-INSERT INTO Accounts VALUES ('Pavan', 6789012345, 3000, '2023-04-28 12:00:00', 'Rajashekar', '', '', 5000);
+INSERT INTO Accounts VALUES ('Pavan', 6789012345, 3000, '2023-04-28 12:00:00', 'Devaraj', '', '', 5000,'Devaraj',4);
 
-INSERT INTO Accounts VALUES ('Subramanyam', 8901234567, 50, '2023-04-28 12:00:00', 'Rajashekar', '', '', 5000);*/
+INSERT INTO Accounts VALUES ('Subramanyam', 8901234567, 50, '2023-04-28 12:00:00', 'Pavan', '', '', 5000,'Pavan',5);*/
 
 
 
